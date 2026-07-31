@@ -38,8 +38,10 @@ export function HomeClient() {
 
   async function handleSign() {
     if (signed || signing) return;
-    setErrorMsg('Petition closed');
-    return;
+
+    setSigning(true);
+    setErrorMsg("");
+
     try {
       let deviceId = localStorage.getItem('io_device_id');
       if (!deviceId) {
