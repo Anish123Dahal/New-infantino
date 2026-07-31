@@ -38,8 +38,8 @@ export function HomeClient() {
 
   async function handleSign() {
     if (signed || signing) return;
-    setSigning(true);
-    setErrorMsg('');
+    setErrorMsg('Petition closed');
+    return;
     try {
       let deviceId = localStorage.getItem('io_device_id');
       if (!deviceId) {
@@ -97,8 +97,8 @@ export function HomeClient() {
 
           <div className="container relative z-10 flex min-h-screen flex-col justify-center gap-8 py-10 lg:flex-row lg:items-center lg:gap-12 lg:py-20">
 
-            {/* Signature card — first on mobile via order-first, moves right on desktop */}
-            <div className="order-first w-full max-w-md mx-auto lg:order-last lg:mx-0 lg:flex-shrink-0">
+            {/* Signature card */}
+            <div className="order-last w-full max-w-md mx-auto lg:mx-0 lg:flex-shrink-0">
               <div className="rounded-2xl bg-white/10 p-6 backdrop-blur-md border border-white/20 shadow-2xl sm:p-8">
                 <p className="eyebrow text-white/70">Verified supporters</p>
                 <div
@@ -125,7 +125,7 @@ export function HomeClient() {
                   disabled={signing || signed}
                   className="btn btn-red mt-6 w-full !py-4 disabled:opacity-75 disabled:cursor-not-allowed text-lg font-black tracking-wide"
                 >
-                  {signed ? 'Signed ✓' : signing ? 'Signing...' : 'Add my signature'}
+                  {signed ? 'Signed ✓' : signing ? 'Signing...' : 'Sign the petition'}
                 </button>
                 {errorMsg && (
                   <p className="mt-3 text-center text-sm text-red-500 font-bold">{errorMsg}</p>
@@ -139,8 +139,8 @@ export function HomeClient() {
               </div>
             </div>
 
-            {/* Text content — second on mobile, left on desktop */}
-            <div className="order-last flex-1 lg:order-first">
+            {/* Text content */}
+            <div className="order-first flex-1">
               <p className="eyebrow mb-4 flex items-center gap-3 text-white/70">
                 <span className="h-px w-10 bg-campaign" /> Global supporter campaign
               </p>
@@ -173,46 +173,7 @@ export function HomeClient() {
           </div>
         </section>
 
-        {/* Latest Update Section */}
-        <section id="updates" className="bg-white py-16 sm:py-24">
-          <div className="container">
-            <p className="eyebrow text-campaign">Latest update</p>
-            <div className="mt-5 grid overflow-hidden rounded-2xl bg-zinc-950 text-white lg:grid-cols-2">
-              <div className="relative min-h-[250px] sm:min-h-[330px]">
-                <Image
-                  src="/images/infantino-speaking.jpg"
-                  fill
-                  className="object-cover opacity-90 object-top"
-                  alt="Gianni Infantino speaking at FIFA podium"
-                  sizes="(max-width:1024px) 100vw, 50vw"
-                />
-              </div>
-              <div className="p-6 sm:p-12">
-                <p className="text-xs font-bold uppercase tracking-widest text-white/50">
-                  31 July 2026
-                </p>
-                <h3 className="mt-4 text-2xl font-black tracking-tight sm:text-4xl">
-                  A global call for accountable football leadership
-                </h3>
-                <p className="mt-4 leading-7 text-white/60">
-                  Supporters across borders are coming together around a simple principle:
-                  football must serve its people.
-                </p>
-              </div>
-            </div>
 
-            <div className="mt-8 overflow-hidden rounded-2xl bg-black">
-              <Image
-                src="/images/infantino-trump.jpg"
-                alt="Gianni Infantino and Donald Trump with a FIFA red card"
-                width={1200}
-                height={800}
-                className="w-full h-auto"
-                sizes="(max-width:1024px) 100vw, 100vw"
-              />
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
