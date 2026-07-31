@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { apiError, fail, ok } from '@/lib/http';
 import { blindHash, getIp } from '@/lib/security';
 import { rateLimit } from '@/lib/rate-limit';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { campaign } from '@/lib/campaign';
 import { redis, safeRedis } from '@/lib/redis';
 
@@ -17,18 +17,28 @@ export async function POST(req: Request) {
       return fail('RATE_LIMITED', 'Too many attempts. Please try again later.', 429);
     }
 
-    const { error } = await supabase
-      .from('signatures')
-      .insert([{ device_id: input.deviceId }]);
+    const c = await campaign();
+    const dHash = blindHash(input.deviceId);
 
-    if (error) {
-      if (error.code === '23505') {
-        return fail('ALREADY_SIGNED', 'This device has already signed this petition.', 409);
-      }
-      throw error;
+    const existing = await db.signature.findFirst({
+      where: { campaignId: c.id, deviceHash: dHash }
+    });
+
+    if (existing) {
+      return fail('ALREADY_SIGNED', 'This device has already signed this petition.', 409);
     }
 
-    const c = await campaign();
+    await db.signature.create({
+      data: {
+        campaignId: c.id,
+        displayName: 'Anonymous Supporter',
+        countryCode: 'ZZ',
+        deviceHash: dHash,
+        ipHash: blindHash(ip),
+        status: 'VERIFIED',
+        verifiedAt: new Date()
+      }
+    });
     await safeRedis(() => redis.incr(`campaign:${c.id}:verified-count`), null);
 
     return ok({ status: 'VERIFIED' }, { status: 201 });

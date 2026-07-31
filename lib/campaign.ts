@@ -19,8 +19,7 @@ export async function campaign() {
 export async function signatureCount(campaignId:string) {
  const key=`campaign:${campaignId}:verified-count`; const cached=await safeRedis(()=>redis.get(key),null);
  if(cached!==null) return Number(cached);
- const { count, error } = await supabase.from('signatures').select('*', { count: 'exact', head: true });
- const total = count || 0;
+ const total = await db.signature.count({ where: { campaignId } });
  await safeRedis(()=>redis.set(key,total,'EX',60),null); return total;
 }
 export async function voteResults(campaignId:string) {
