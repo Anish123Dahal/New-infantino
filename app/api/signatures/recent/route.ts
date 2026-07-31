@@ -1,0 +1,2 @@
+import { campaign } from '@/lib/campaign'; import { db } from '@/lib/db'; import { ok,apiError } from '@/lib/http';
+export const dynamic='force-dynamic';export async function GET(){try{const c=await campaign();const rows=await db.signature.findMany({where:{campaignId:c.id,status:'VERIFIED'},orderBy:{verifiedAt:'desc'},take:8,select:{displayName:true,countryCode:true,verifiedAt:true}});return ok(rows.map(r=>({name:r.displayName,countryCode:r.countryCode,at:r.verifiedAt})));}catch(e){return apiError(e)}}

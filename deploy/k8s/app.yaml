@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: petition-web }
+spec:
+  replicas: 3
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: petition-web } }
+  template:
+    metadata: { labels: { app: petition-web } }
+    spec:
+      containers:
+        - name: web
+          image: REGISTRY/infantino-out:IMAGE_TAG
+          ports: [{ containerPort: 3000 }]
+          envFrom: [{ secretRef: { name: petition-secrets } }]
+          resources: { requests: { cpu: 250m, memory: 256Mi }, limits: { cpu: "2", memory: 1Gi } }
+          readinessProbe: { httpGet: { path: /api/ready, port: 3000 }, initialDelaySeconds: 8, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /api/health, port: 3000 }, initialDelaySeconds: 15, periodSeconds: 10 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: petition-web }
+spec: { selector: { app: petition-web }, ports: [{ port: 80, targetPort: 3000 }] }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: petition-web }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: petition-web }
+  minReplicas: 3
+  maxReplicas: 100
+  behavior: { scaleUp: { stabilizationWindowSeconds: 0 }, scaleDown: { stabilizationWindowSeconds: 300 } }
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 60 } }

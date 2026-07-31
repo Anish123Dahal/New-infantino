@@ -1,0 +1,56 @@
+// This is your Prisma schema file
+// Generated from model usage in lib/campaign.ts and app/api/votes/route.ts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Campaign {
+  id            String       @id @default(uuid())
+  slug          String       @unique
+  title         String
+  description   String?
+  votingEnabled Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  voteOptions   VoteOption[]
+  votes         Vote[]
+}
+
+model VoteOption {
+  id         String   @id @default(uuid())
+  campaignId String
+  label      String
+  description String?
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  votes      Vote[]
+
+  @@index([campaignId])
+}
+
+model Vote {
+  id          String   @id @default(uuid())
+  campaignId  String
+  optionId    String
+  voterHash   String
+  ipHash      String
+  deviceHash  String
+  status      String   @default("ACCEPTED")
+  createdAt   DateTime @default(now())
+
+  campaign    Campaign   @relation(fields: [campaignId], references: [id])
+  option      VoteOption @relation(fields: [optionId], references: [id])
+
+  @@unique([campaignId, voterHash])
+  @@index([campaignId, optionId])
+}

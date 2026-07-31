@@ -1,0 +1,1 @@
+import { campaign,voteResults } from '@/lib/campaign';import {ok,apiError} from '@/lib/http';export const dynamic='force-dynamic';export async function GET(){try{return ok(await voteResults((await campaign()).id))}catch(e){return apiError(e)}}

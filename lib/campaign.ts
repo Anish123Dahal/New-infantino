@@ -1,0 +1,16 @@
+import { db } from './db'; 
+import { redis, safeRedis } from './redis';
+import { supabase } from './supabase';
+
+export async function campaign() { return db.campaign.findUniqueOrThrow({where:{slug:'infantino-out'}}); }
+export async function signatureCount(campaignId:string) {
+ const key=`campaign:${campaignId}:verified-count`; const cached=await safeRedis(()=>redis.get(key),null);
+ if(cached!==null) return Number(cached);
+ const { count, error } = await supabase.from('signatures').select('*', { count: 'exact', head: true });
+ const total = count || 0;
+ await safeRedis(()=>redis.set(key,total,'EX',60),null); return total;
+}
+export async function voteResults(campaignId:string) {
+ const options=await db.voteOption.findMany({where:{campaignId,isActive:true},orderBy:{sortOrder:'asc'},select:{id:true,label:true,description:true,_count:{select:{votes:{where:{status:'ACCEPTED'}}}}}});
+ const total=options.reduce((n,o)=>n+o._count.votes,0); return {total,options:options.map(o=>({id:o.id,label:o.label,description:o.description,votes:o._count.votes,percentage:total?Math.round(o._count.votes*1000/total)/10:0}))};
+}

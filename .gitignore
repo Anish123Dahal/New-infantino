@@ -1,0 +1,8 @@
+node_modules
+.next
+.env
+coverage
+*.log
+portable-git.exe 
+git/ 
+push.bat 
