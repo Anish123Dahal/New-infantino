@@ -1,5 +1,5 @@
-// This is your Prisma schema file
-// Generated from model usage in lib/campaign.ts and app/api/votes/route.ts
+// This is your Prisma schema file,
+// auto-extended with models inferred from API route usage.
 
 generator client {
   provider = "prisma-client-js"
@@ -14,43 +14,117 @@ model Campaign {
   id            String       @id @default(uuid())
   slug          String       @unique
   title         String
+  headline      String?
   description   String?
+  goal          Decimal?     @db.Decimal(12, 0)
   votingEnabled Boolean      @default(false)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
-  voteOptions   VoteOption[]
-  votes         Vote[]
+  voteOptions        VoteOption[]
+  votes              Vote[]
+  signatures         Signature[]
+  dailyCampaignStats DailyCampaignStat[]
 }
 
 model VoteOption {
-  id         String   @id @default(uuid())
-  campaignId String
-  label      String
+  id          String   @id @default(uuid())
+  campaignId  String
+  label       String
   description String?
-  isActive   Boolean  @default(true)
-  sortOrder  Int      @default(0)
-  createdAt  DateTime @default(now())
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
 
-  campaign   Campaign @relation(fields: [campaignId], references: [id])
-  votes      Vote[]
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+  votes    Vote[]
 
   @@index([campaignId])
 }
 
 model Vote {
-  id          String   @id @default(uuid())
-  campaignId  String
-  optionId    String
-  voterHash   String
-  ipHash      String
-  deviceHash  String
-  status      String   @default("ACCEPTED")
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  campaignId String
+  optionId   String
+  voterHash  String
+  ipHash     String
+  deviceHash String
+  status     String   @default("ACCEPTED")
+  createdAt  DateTime @default(now())
 
-  campaign    Campaign   @relation(fields: [campaignId], references: [id])
-  option      VoteOption @relation(fields: [optionId], references: [id])
+  campaign Campaign   @relation(fields: [campaignId], references: [id])
+  option   VoteOption @relation(fields: [optionId], references: [id])
 
   @@unique([campaignId, voterHash])
   @@index([campaignId, optionId])
 }
+
+model Signature {
+  id          String    @id @default(uuid())
+  publicId    String    @unique @default(uuid())
+  campaignId  String
+  displayName String
+  countryCode String
+  emailHash   String?
+  ipHash      String?
+  deviceHash  String?
+  status      String    @default("PENDING") // PENDING | VERIFIED | REJECTED
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  campaign           Campaign            @relation(fields: [campaignId], references: [id])
+  emailVerifications EmailVerification[]
+  fraudEvents        FraudEvent[]
+
+  @@index([campaignId, status])
+  @@index([campaignId, countryCode])
+}
+
+model EmailVerification {
+  id          String    @id @default(uuid())
+  signatureId String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  signature Signature @relation(fields: [signatureId], references: [id])
+}
+
+model FraudEvent {
+  id          String    @id @default(uuid())
+  signatureId String
+  type        String
+  detail      String?
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  signature Signature @relation(fields: [signatureId], references: [id])
+
+  @@index([resolvedAt])
+}
+
+model Admin {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("ADMIN")
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model DailyCampaignStat {
+  id                 String   @id @default(uuid())
+  campaignId         String
+  date               DateTime @db.Date
+  verifiedSignatures Int      @default(0)
+  createdAt          DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+
+  @@unique([campaignId, date])
+  @@index([campaignId, date])
+}
+
