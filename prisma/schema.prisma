@@ -1,13 +1,15 @@
-// This is your Prisma schema file,
-// auto-extended with models inferred from API route usage.
+// This is your Prisma schema file.
+// Production uses PostgreSQL.
+// Set DATABASE_URL (pooled) and DIRECT_URL (direct connection) in your .env file.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Campaign {
@@ -16,7 +18,7 @@ model Campaign {
   title         String
   headline      String?
   description   String?
-  goal          Decimal?     @db.Decimal(12, 0)
+  goal          Decimal?
   votingEnabled Boolean      @default(false)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -68,7 +70,7 @@ model Signature {
   emailHash   String?
   ipHash      String?
   deviceHash  String?
-  status      String    @default("PENDING") // PENDING | VERIFIED | REJECTED
+  status      String    @default("PENDING")
   verifiedAt  DateTime?
   createdAt   DateTime  @default(now())
 
@@ -118,7 +120,7 @@ model Admin {
 model DailyCampaignStat {
   id                 String   @id @default(uuid())
   campaignId         String
-  date               DateTime @db.Date
+  date               DateTime
   verifiedSignatures Int      @default(0)
   createdAt          DateTime @default(now())
 
@@ -127,4 +129,3 @@ model DailyCampaignStat {
   @@unique([campaignId, date])
   @@index([campaignId, date])
 }
-

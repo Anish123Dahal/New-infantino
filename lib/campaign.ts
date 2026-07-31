@@ -2,7 +2,20 @@ import { db } from './db';
 import { redis, safeRedis } from './redis';
 import { supabase } from './supabase';
 
-export async function campaign() { return db.campaign.findUniqueOrThrow({where:{slug:'infantino-out'}}); }
+export async function campaign() {
+  return db.campaign.upsert({
+    where: { slug: 'infantino-out' },
+    update: {},
+    create: {
+      slug: 'infantino-out',
+      title: 'Infantino Out',
+      headline: 'Remove Gianni Infantino — FIFA Needs Accountability',
+      description: 'Football belongs to the fans. This campaign calls for greater accountability, transparency, and leadership that puts football, players, and supporters first.',
+      goal: 5000000,
+      votingEnabled: false,
+    },
+  });
+}
 export async function signatureCount(campaignId:string) {
  const key=`campaign:${campaignId}:verified-count`; const cached=await safeRedis(()=>redis.get(key),null);
  if(cached!==null) return Number(cached);

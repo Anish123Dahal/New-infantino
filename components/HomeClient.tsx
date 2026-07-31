@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { ArrowRight, Check } from 'lucide-react';
 import { Share } from './Share';
 
 type Campaign = {
@@ -44,16 +43,20 @@ export function HomeClient() {
     try {
       let deviceId = localStorage.getItem('io_device_id');
       if (!deviceId) {
-        deviceId = typeof window !== 'undefined' && window.crypto && typeof window.crypto.randomUUID === 'function'
-          ? window.crypto.randomUUID()
-          : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        deviceId =
+          typeof window !== 'undefined' &&
+          window.crypto &&
+          typeof window.crypto.randomUUID === 'function'
+            ? window.crypto.randomUUID()
+            : Math.random().toString(36).substring(2, 15) +
+              Math.random().toString(36).substring(2, 15);
         localStorage.setItem('io_device_id', deviceId);
       }
 
       const r = await fetch('/api/signatures', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ deviceId })
+        body: JSON.stringify({ deviceId }),
       });
       const j = await r.json();
 
@@ -69,7 +72,7 @@ export function HomeClient() {
           setErrorMsg(j.error?.message || 'Unable to sign the petition.');
         }
       }
-    } catch (e) {
+    } catch {
       setErrorMsg('An unexpected error occurred. Please try again.');
     } finally {
       setSigning(false);
@@ -79,7 +82,7 @@ export function HomeClient() {
   return (
     <>
       <main>
-        {/* Unified Hero & Petition Section */}
+        {/* Hero & Petition Section */}
         <section className="relative min-h-screen overflow-hidden bg-black text-white">
           <Image
             src="/images/infantino-out-graphic.jpg"
@@ -91,41 +94,22 @@ export function HomeClient() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/95" />
           <div className="noise absolute inset-0 opacity-50" />
-          <div className="container relative z-10 flex min-h-screen flex-col justify-center py-20 lg:flex-row lg:items-center lg:gap-12">
-            <div className="flex-1 pt-10 lg:pt-0">
-              <p className="eyebrow mb-4 flex items-center gap-3 text-white/70">
-                <span className="h-px w-10 bg-campaign" /> Global supporter campaign
-              </p>
-              <h1 className="display text-[clamp(3rem,9vw,7rem)] leading-none mb-6">
-                INFANTINO<br />
-                <span className="text-campaign">OUT.</span>
-              </h1>
-              <h2 className="mt-4 max-w-2xl text-2xl font-bold leading-tight sm:text-4xl">
-                Remove Gianni Infantino — FIFA Needs Accountability
-              </h2>
-              <p className="mt-4 max-w-xl text-base leading-7 text-white/70">
-                Football belongs to the fans. This campaign calls for greater accountability, transparency, and leadership that puts football, players, and supporters first.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold text-white/90">
-                <span className="flex items-center gap-2">
-                  <Check size={16} className="text-campaign" /> Independent campaign
-                </span>
-                <span className="flex items-center gap-2">
-                  <Check size={16} className="text-campaign" /> Device-verified
-                </span>
-                <span className="flex items-center gap-2">
-                  <Check size={16} className="text-campaign" /> Privacy protected
-                </span>
-              </div>
-            </div>
 
-            <div className="mt-12 w-full max-w-md lg:mt-0">
+          <div className="container relative z-10 flex min-h-screen flex-col justify-center gap-8 py-10 lg:flex-row lg:items-center lg:gap-12 lg:py-20">
+
+            {/* Signature card — first on mobile via order-first, moves right on desktop */}
+            <div className="order-first w-full max-w-md mx-auto lg:order-last lg:mx-0 lg:flex-shrink-0">
               <div className="rounded-2xl bg-white/10 p-6 backdrop-blur-md border border-white/20 shadow-2xl sm:p-8">
                 <p className="eyebrow text-white/70">Verified supporters</p>
-                <div className="mt-2 text-5xl font-black tracking-tighter sm:text-6xl" aria-live="polite">
+                <div
+                  className="mt-2 text-5xl font-black tracking-tighter sm:text-6xl"
+                  aria-live="polite"
+                >
                   {count === undefined ? '—' : fmt(count)}
                 </div>
-                <p className="mt-1 text-xs font-black tracking-[.16em] text-campaign">SIGNATURES</p>
+                <p className="mt-1 text-xs font-black tracking-[.16em] text-campaign">
+                  SIGNATURES
+                </p>
                 <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/20">
                   <div
                     className="h-full rounded-full bg-campaign transition-all duration-1000"
@@ -143,7 +127,9 @@ export function HomeClient() {
                 >
                   {signed ? 'Signed ✓' : signing ? 'Signing...' : 'Add my signature'}
                 </button>
-                {errorMsg && <p className="mt-3 text-center text-sm text-red-500 font-bold">{errorMsg}</p>}
+                {errorMsg && (
+                  <p className="mt-3 text-center text-sm text-red-500 font-bold">{errorMsg}</p>
+                )}
                 <div className="mt-5 flex justify-center">
                   <Share compact />
                 </div>
@@ -152,14 +138,37 @@ export function HomeClient() {
                 </p>
               </div>
             </div>
+
+            {/* Text content — second on mobile, left on desktop */}
+            <div className="order-last flex-1 lg:order-first">
+              <p className="eyebrow mb-4 flex items-center gap-3 text-white/70">
+                <span className="h-px w-10 bg-campaign" /> Global supporter campaign
+              </p>
+              <h1 className="display text-[clamp(3rem,9vw,7rem)] leading-none mb-6">
+                INFANTINO
+                <br />
+                <span className="text-campaign">OUT.</span>
+              </h1>
+              <h2 className="mt-4 max-w-2xl text-2xl font-bold leading-tight sm:text-4xl">
+                Remove Gianni Infantino — FIFA Needs Accountability
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-7 text-white/70">
+                Football belongs to the fans. This campaign calls for greater accountability,
+                transparency, and leadership that puts football, players, and supporters first.
+              </p>
+            </div>
           </div>
         </section>
 
-        {/* Marquee Section */}
+        {/* Marquee */}
         <section className="bg-campaign py-4 text-white">
           <div className="marquee font-black uppercase tracking-[.16em]">
             <span>
-              Football belongs to the fans&nbsp;&nbsp; • &nbsp;&nbsp;Accountability now&nbsp;&nbsp; • &nbsp;&nbsp;Transparency in leadership&nbsp;&nbsp; • &nbsp;&nbsp;Football belongs to the fans&nbsp;&nbsp; • &nbsp;&nbsp;Accountability now&nbsp;&nbsp; • &nbsp;&nbsp;Transparency in leadership&nbsp;&nbsp; • &nbsp;&nbsp;
+              Football belongs to the fans&nbsp;&nbsp; • &nbsp;&nbsp;Accountability
+              now&nbsp;&nbsp; • &nbsp;&nbsp;Transparency in leadership&nbsp;&nbsp; •
+              &nbsp;&nbsp;Football belongs to the fans&nbsp;&nbsp; • &nbsp;&nbsp;Accountability
+              now&nbsp;&nbsp; • &nbsp;&nbsp;Transparency in leadership&nbsp;&nbsp; •
+              &nbsp;&nbsp;
             </span>
           </div>
         </section>
@@ -173,18 +182,21 @@ export function HomeClient() {
                 <Image
                   src="/images/infantino-speaking.jpg"
                   fill
-                  className="object-cover opacity-75 object-top"
-                  alt="Gianni Infantino speaking"
+                  className="object-cover opacity-90 object-top"
+                  alt="Gianni Infantino speaking at FIFA podium"
                   sizes="(max-width:1024px) 100vw, 50vw"
                 />
               </div>
               <div className="p-6 sm:p-12">
-                <p className="text-xs font-bold uppercase tracking-widest text-white/50">31 July 2026</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-white/50">
+                  31 July 2026
+                </p>
                 <h3 className="mt-4 text-2xl font-black tracking-tight sm:text-4xl">
                   A global call for accountable football leadership
                 </h3>
                 <p className="mt-4 leading-7 text-white/60">
-                  Supporters across borders are coming together around a simple principle: football must serve its people.
+                  Supporters across borders are coming together around a simple principle:
+                  football must serve its people.
                 </p>
               </div>
             </div>
@@ -192,7 +204,7 @@ export function HomeClient() {
             <div className="mt-8 overflow-hidden rounded-2xl bg-black">
               <Image
                 src="/images/infantino-trump.jpg"
-                alt="Gianni Infantino and Donald Trump with a red card"
+                alt="Gianni Infantino and Donald Trump with a FIFA red card"
                 width={1200}
                 height={800}
                 className="w-full h-auto"
