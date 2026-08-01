@@ -1,6 +1,6 @@
 import { db } from './db'; 
 import { redis, safeRedis } from './redis';
-import { supabase } from './supabase';
+
 
 export async function campaign() {
   return db.campaign.upsert({
@@ -16,8 +16,31 @@ export async function campaign() {
     },
   });
 }
-export async function signatureCount(_campaignId:string) {
- return 1000000;
+// Base count that the petition starts from (pre-existing supporters).
+// Every new real signature increments on top of this.
+const BASE_COUNT = 1_000_000;
+
+export async function signatureCount(campaignId: string): Promise<number> {
+  // Try Redis cache first (fast path).
+  // The Redis key stores the REAL db count (without the base).
+  const cached = await safeRedis(
+    () => redis.get(`campaign:${campaignId}:verified-count`),
+    null
+  );
+  if (cached !== null) return BASE_COUNT + parseInt(cached, 10);
+
+  // Fall back to real DB count
+  const count = await db.signature.count({
+    where: { campaignId, status: 'VERIFIED' },
+  });
+
+  // Warm the cache so future requests are fast (60s TTL)
+  await safeRedis(
+    () => redis.set(`campaign:${campaignId}:verified-count`, String(count), 'EX', 60),
+    null
+  );
+
+  return BASE_COUNT + count;
 }
 export async function voteResults(campaignId:string) {
  const options=await db.voteOption.findMany({where:{campaignId,isActive:true},orderBy:{sortOrder:'asc'},select:{id:true,label:true,description:true,_count:{select:{votes:{where:{status:'ACCEPTED'}}}}}});
